@@ -2,7 +2,7 @@ import { ReturnModelType, prop, getModelForClass, types } from '@typegoose/typeg
 import { BaseModel, schemaOptions } from '../../../shared/base.model';
 import { AutoMap } from '@nartc/automapper';
 
-export class Department extends BaseModel<Department> {
+export class Department{
     @prop({ required: [true,'clientId is required'],unique: true })
     @AutoMap()
     deptno: number;

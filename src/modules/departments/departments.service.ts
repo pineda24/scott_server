@@ -1,30 +1,57 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { InjectModel } from '@nestjs/mongoose';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
+import { Department } from './models/departments.model';
+import { Model } from 'mongoose';
+import { ReturnModelType } from '@typegoose/typegoose';
 
 @Injectable()
 export class DepartmentsService {
-
   constructor(
-  ){}
+    @InjectModel(Department.name)
+    private departmentModel: ReturnModelType<typeof Department>,
+  ) {}
 
-  create(createDepartmentDto: CreateDepartmentDto) {
-    return 'This action adds a new department';
+  async create(createDepartmentDto: Department) {
+    try {
+      const createdDepart = new this.departmentModel(createDepartmentDto);
+      return await createdDepart.save();
+      // return result.toJSON() as Department;
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
   }
 
-  findAll() {
-    return `This action returns all departments`;
+  async findAll() {
+    try {
+      return await this.departmentModel.find({});
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} department`;
+  async findOne(id: number) {
+    try {
+      return await this.departmentModel.findOne({"deptno": id});
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
   }
 
-  update(id: number, updateDepartmentDto: UpdateDepartmentDto) {
-    return `This action updates a #${id} department`;
+  async update(id: number, updateDepartmentDto: Department) {
+    try {
+      return await this.departmentModel.updateOne({"deptno": id},updateDepartmentDto);
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} department`;
+  async remove(id: number) {
+    try {
+      return await this.departmentModel.remove({"deptno": id});
+    } catch (e) {
+      throw new InternalServerErrorException(e);
+    }
   }
 }
