@@ -15,6 +15,7 @@ export class DepartmentsController {
 
   @Get()
   findAll() {
+    console.log("ALL DEPARTMENTS");
     return this.departmentsService.findAll();
   }
 

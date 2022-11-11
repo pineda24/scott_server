@@ -9,7 +9,7 @@ export class Department{
 
     @prop({ required: [true, 'dName is required'] })
     @AutoMap()
-    dName: string;
+    dname: string;
 
     @prop({ required: [true, 'loc is required'] })
     @AutoMap()
