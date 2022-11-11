@@ -85,7 +85,7 @@ export class Employee{
     @AutoMap()
 	comm: number;
 
-    @prop({ required: [true,'deptno is required'], ref: () => Department })
+    @prop({ required: [false,'deptno is required'], ref: () => Department, default: null })
     @AutoMap()
 	deptno: Ref<Department>
 
