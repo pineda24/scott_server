@@ -73,7 +73,7 @@ export class Employee{
     @AutoMap()
 	mgr: Ref<Employee>;
 
-    @prop({ required: [true,'hiredate is required'] })
+    @prop({ required: [true,'hiredate is required'],default: new Date() })
     @AutoMap()
 	hiredate: Date;
 

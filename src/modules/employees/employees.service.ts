@@ -110,10 +110,36 @@ export class EmployeesService {
 
   async update(id: number, updateEmployeeDto: Employee) {
     try {
-      return await this.employeeModel.updateOne(
+      // console.log(updateEmployeeDto);
+      let { empno, ename, job, mgr, hiredate, sal, comm, deptno } =
+        updateEmployeeDto;
+      let emplo = new Employee();
+      emplo.empno = empno ? empno : -1;
+      emplo.ename = ename ? ename : "";
+      emplo.job = job ? job : "";
+      emplo.mgr = mgr ? mgr : null;
+      emplo.hiredate = hiredate ? hiredate : new Date();
+      emplo.sal = sal ? sal : 0;
+      emplo.comm = comm ? comm : null;
+      emplo.deptno = deptno ? deptno : null;
+
+
+      // let employee = new Object({ 
+      //   empno:empno ? empno : -1, 
+      //   ename:ename ? ename : "", 
+      //   job:job ? job : "", 
+      //   mgr:mgr ? mgr : null, 
+      //   hiredate:hiredate ? hiredate : Date(), 
+      //   sal:sal ? sal : 0, 
+      //   comm:comm ? comm : null, 
+      //   deptno:deptno ? deptno : null
+      // });
+      let exu = await this.employeeModel.updateOne(
         { empno: id },
-        updateEmployeeDto,
+        emplo,
       );
+      console.log(exu);
+      return exu;
     } catch (e) {
       throw new InternalServerErrorException(e);
     }
