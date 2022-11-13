@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { CreateDepartmentDto } from './dto/create-department.dto';
 import { UpdateDepartmentDto } from './dto/update-department.dto';
@@ -6,6 +6,7 @@ import { Department } from './models/departments.model';
 import { Model } from 'mongoose';
 import { ReturnModelType } from '@typegoose/typegoose';
 import { Employee } from '../employees/models/employees.model';
+import { Console } from 'console';
 
 @Injectable()
 export class DepartmentsService {
@@ -19,10 +20,16 @@ export class DepartmentsService {
   async create(createDepartmentDto: Department) {
     try {
       const createdDepart = new this.departmentModel(createDepartmentDto);
-      return await createdDepart.save();
-      // return result.toJSON() as Department;
+      return await createdDepart
+        .save()
+        .then((res) => {
+          return res;
+        })
+        .catch((err) => {
+          return err;
+        });
     } catch (e) {
-      throw new InternalServerErrorException(e);
+      throw new InternalServerErrorException('Found Unespected Error');
     }
   }
 
@@ -70,10 +77,14 @@ export class DepartmentsService {
 
   async update(id: number, updateDepartmentDto: Department) {
     try {
-      return await this.departmentModel.updateOne(
-        { deptno: id },
-        updateDepartmentDto,
-      );
+      return await this.departmentModel
+        .updateOne({ deptno: id }, updateDepartmentDto)
+        .then((res) => {
+          return res;
+        })
+        .catch((err) => {
+          return err;
+        });
     } catch (e) {
       throw new InternalServerErrorException(e);
     }
@@ -81,8 +92,6 @@ export class DepartmentsService {
 
   async remove(id: number) {
     try {
-      // let employ = await this.employeeModel.find({ deptno: id })
-      // return await this.departmentModel.remove({ deptno: id });
       let dept = await this.departmentModel.aggregate([
         {
           $match: {
@@ -115,15 +124,19 @@ export class DepartmentsService {
         },
       ]);
       if(dept && dept.length > 0){
-        if(dept[0].noemployees == 0) return await this.departmentModel.remove({ deptno: id });
-      }
-      else{
-        return {
-          "message": "Error delete department"
-        }
+        if(dept[0].noemployees == 0) return await this.departmentModel.deleteOne({ deptno: id });
+        else throw new HttpException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'Department has employees.',
+          error: 'Bad Request'
+        }, HttpStatus.BAD_REQUEST);
+      } else if (dept.length == 0) {
+        throw new NotFoundException('Department not found.');
+      } else {
+        throw new InternalServerErrorException('Found Unespected Error');
       }
     } catch (e) {
-      throw new InternalServerErrorException(e);
+      throw e;
     }
   }
 }

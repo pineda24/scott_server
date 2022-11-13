@@ -3,15 +3,15 @@ import { BaseModel, schemaOptions } from '../../../shared/base.model';
 import { AutoMap } from '@nartc/automapper';
 
 export class Department{
-    @prop({ required: [true,'clientId is required'],unique: true })
+    @prop({ required: [true,'Attribute deptno is required'], unique: true })
     @AutoMap()
     deptno: number;
 
-    @prop({ required: [true, 'dName is required'] })
+    @prop({ required: [true, 'Attribute dname is required'] })
     @AutoMap()
     dname: string;
 
-    @prop({ required: [true, 'loc is required'] })
+    @prop({ required: [true, 'Attribute loc is required'] })
     @AutoMap()
     loc: string;
 
@@ -22,8 +22,4 @@ export class Department{
     static get modelName(): string {
         return this.model.modelName;
     }
-
-    // static createModel(params?: any): InstanceType<Department> {
-    //     return new this.model(params);
-    // }
 }

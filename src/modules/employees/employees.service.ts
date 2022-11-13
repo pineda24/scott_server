@@ -1,4 +1,4 @@
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { mongoose, ReturnModelType } from '@typegoose/typegoose';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
@@ -16,31 +16,17 @@ export class EmployeesService {
     private departmentModel: ReturnModelType<typeof Department>,
   ) {}
 
-  // async create(createEmployeeDto: Employee) {
-  //   try {
-  //     let { deptno } = createEmployeeDto;
-  //     let depart = await this.departmentModel.findById(deptno);
-  //     if (depart) {
-  //       const createEmployee = new this.employeeModel(createEmployeeDto);
-  //       await createEmployee.save();
-  //       return {
-  //         message: 'Success',
-  //       };
-  //     } else {
-  //       return {
-  //         message: 'No department inserted.',
-  //       };
-  //     }
-  //     // return result.toJSON() as Department;
-  //   } catch (e) {
-  //     throw new InternalServerErrorException(e);
-  //   }
-  // }
-
   async create(createEmployeeDto: Employee) {
     try {
       const createEmployee = new this.employeeModel(createEmployeeDto);
-      return await createEmployee.save();
+      return await createEmployee
+        .save()
+        .then((res) => {
+          return res;
+        })
+        .catch((err) => {
+          return err;
+        });
     } catch (e) {
       throw new InternalServerErrorException(e);
     }
@@ -122,34 +108,68 @@ export class EmployeesService {
       emplo.sal = sal ? sal : 0;
       emplo.comm = comm ? comm : null;
       emplo.deptno = deptno ? deptno : null;
-
-
-      // let employee = new Object({ 
-      //   empno:empno ? empno : -1, 
-      //   ename:ename ? ename : "", 
-      //   job:job ? job : "", 
-      //   mgr:mgr ? mgr : null, 
-      //   hiredate:hiredate ? hiredate : Date(), 
-      //   sal:sal ? sal : 0, 
-      //   comm:comm ? comm : null, 
-      //   deptno:deptno ? deptno : null
-      // });
-      let exu = await this.employeeModel.updateOne(
-        { empno: id },
-        emplo,
-      );
-      console.log(exu);
-      return exu;
+      return await this.employeeModel
+        .updateOne({ empno: id }, emplo)
+        .then((res) => {
+          return res;
+        })
+        .catch((err) => {
+          return err;
+        });
     } catch (e) {
       throw new InternalServerErrorException(e);
     }
   }
 
   async remove(id: number) {
+
     try {
-      return await this.employeeModel.remove({ empno: id });
+      let emp = await this.employeeModel.aggregate([
+        {
+          $match: {
+            empno: id,
+          },
+        },
+        {
+          $lookup: {
+            from: 'employees',
+            localField: '_id',
+            foreignField: 'mgr',
+            as: 'noemployees',
+          },
+        },
+        {
+          $project: {
+            _id: 1,
+            empno: 1,
+            noemployees: {
+              $cond: {
+                if: { $isArray: '$noemployees' },
+                then: { $size: '$noemployees' },
+                else: 0,
+              },
+            },
+          },
+        },
+        {
+          $limit: 1,
+        },
+      ]);
+      if(emp && emp.length > 0){
+        if(emp[0].noemployees == 0) return await this.employeeModel.deleteOne({ empno: id });
+        else throw new HttpException({
+          statusCode: HttpStatus.BAD_REQUEST,
+          message: 'Employee has subordinates.',
+          error: 'Bad Request'
+        }, HttpStatus.BAD_REQUEST);
+      } else if (emp.length == 0) {
+        throw new NotFoundException('Employee not found.');
+      } else {
+        throw new InternalServerErrorException('Found Unespected Error');
+      }
     } catch (e) {
-      throw new InternalServerErrorException(e);
+      throw e;
     }
   }
+
 }

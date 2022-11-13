@@ -96,8 +96,4 @@ export class Employee{
     static get modelName(): string {
         return this.model.modelName;
     }
-
-    // static createModel(params?: any): InstanceType<Department> {
-    //     return new this.model(params);
-    // }
 }
